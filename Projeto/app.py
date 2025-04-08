@@ -33,15 +33,15 @@ st.title("Painel de Acidentes de Trânsito no Brasil (2021-2025)")
 def carregar_dados():
     # Carregar dados com tratamento para BOM (Byte Order Mark)
     df_2021 = pd.read_csv(f"{PASTA_DESTINO + os.sep}acidentes2021.csv", sep=";",
-                          encoding="utf-8", low_memory=False)
+                           encoding="utf-8", low_memory=False)
     df_2022 = pd.read_csv(f"{PASTA_DESTINO + os.sep}acidentes2022.csv", sep=";",
-                          encoding="utf-8", low_memory=False)
+                           encoding="utf-8", low_memory=False)
     df_2023 = pd.read_csv(f"{PASTA_DESTINO + os.sep}acidentes2023.csv", sep=";",
-                          encoding="utf-8", low_memory=False)
+                           encoding="utf-8", low_memory=False)
     df_2024 = pd.read_csv(f"{PASTA_DESTINO + os.sep}acidentes2024.csv", sep=";",
-                          encoding="utf-8", low_memory=False)
+                           encoding="utf-8", low_memory=False)
     df_2025 = pd.read_csv(f"{PASTA_DESTINO + os.sep}acidentes2025.csv", sep=";",
-                          encoding="utf-8", low_memory=False)
+                           encoding="utf-8", low_memory=False)
 
     # Remover qualquer coluna com nomes estranhos
     df_2023.columns = df_2023.columns.str.strip().str.replace('ï»¿', '')
@@ -53,7 +53,7 @@ def carregar_dados():
 
     # Concatenar os DataFrames
     df = pd.concat([df_2021, df_2022, df_2023, df_2024,
-                   df_2025], ignore_index=True)
+                    df_2025], ignore_index=True)
 
     # Converter datas e limpar
     df['data_inversa'] = pd.to_datetime(
@@ -101,9 +101,17 @@ tipos = st.sidebar.multiselect(
 sexos = st.sidebar.multiselect(
     "Sexo",
     options=sorted(df[df['sexo'] != 'Ignorado']
-                   ['sexo'].dropna().unique()),  # Excluindo "Ignorado"
+                    ['sexo'].dropna().unique()),  # Excluindo "Ignorado"
     default=sorted(df[df['sexo'] != 'Ignorado']
-                   ['sexo'].dropna().unique())  # Excluindo "Ignorado"
+                    ['sexo'].dropna().unique())  # Excluindo "Ignorado"
+)
+
+# Novo filtro para Horário
+horarios_unicos = sorted(df['horario'].dropna().unique())
+horarios_selecionados = st.sidebar.multiselect(
+    "Horário",
+    options=horarios_unicos,
+    default=horarios_unicos
 )
 
 # Aplicar filtros
@@ -111,7 +119,8 @@ df_filtrado = df[
     (df['uf'].isin(ufs)) &
     (df['data_inversa'].dt.year.isin(anos)) &
     (df['tipo_acidente'].isin(tipos)) &
-    (df['sexo'].isin(sexos))
+    (df['sexo'].isin(sexos)) &
+    (df['horario'].isin(horarios_selecionados))
 ]
 
 # Indicadores principais
@@ -131,7 +140,7 @@ df_mes['data'] = df_mes['data_inversa'].dt.to_timestamp(
 ).dt.strftime('%B/%Y').str.capitalize()
 
 fig1 = px.line(df_mes, x='data', y='Quantidade', markers=True,
-               title="Evolução Mensal dos Acidentes")
+                title="Evolução Mensal dos Acidentes")
 fig1.update_layout(xaxis_title="Mês/Ano")
 
 st.plotly_chart(fig1, use_container_width=True)
@@ -141,17 +150,13 @@ st.subheader("🚗 Tipos de Acidentes")
 df_tipos = df_filtrado['tipo_acidente'].value_counts().reset_index()
 df_tipos.columns = ['tipo_acidente', 'count']
 fig2 = px.bar(df_tipos, x='tipo_acidente', y='count',
-              labels={'tipo_acidente': 'Tipo de Acidente',
-                      'count': 'Quantidade'},
-              title="Distribuição dos Tipos de Acidente")
+                labels={'tipo_acidente': 'Tipo de Acidente',
+                        'count': 'Quantidade'},
+                title="Distribuição dos Tipos de Acidente")
 st.plotly_chart(fig2, use_container_width=True)
 
 # Gráfico 3 - Top 10 Municípios com Mais Acidentes
 st.subheader("🏙️ Top 10 Municípios com Mais Acidentes")
-
-# Filtragem conforme os critérios aplicados (ano, uf, tipo de acidente)
-df_filtrado = df[(df['uf'].isin(ufs)) & (
-    df['data_inversa'].dt.year.isin(anos)) & (df['tipo_acidente'].isin(tipos))]
 
 # Contagem de acidentes por município e ordenação
 df_municipios = df_filtrado['municipio'].value_counts().reset_index()
@@ -162,9 +167,9 @@ df_top10_municipios = df_municipios.head(10)
 
 # Gráfico de barras para os 10 municípios
 fig3 = px.bar(df_top10_municipios, x='municipio', y='quantidade',
-              labels={'municipio': 'Município',
-                      'quantidade': 'Número de Acidentes'},
-              title="Top 10 Municípios Brasileiros com Mais Acidentes")
+                labels={'municipio': 'Município',
+                        'quantidade': 'Número de Acidentes'},
+                title="Top 10 Municípios Brasileiros com Mais Acidentes")
 st.plotly_chart(fig3, use_container_width=True)
 
 # Gráfico 4 - Sexo com Mais Acidentes por Ano
@@ -185,11 +190,11 @@ df_sexo_ano = df_sexo_ano.groupby([df_sexo_ano['data_inversa'].dt.year, 'sexo'])
 
 # Gráfico de barras agrupadas - Acidentes por Sexo ao longo dos anos
 fig_sexo_ano = px.bar(df_sexo_ano, x='data_inversa', y='Quantidade de Acidentes', color='sexo',
-                      title="Evolução de Acidentes por Sexo ao Longo dos Anos",
-                      labels={
-                          'data_inversa': 'Ano', 'Quantidade de Acidentes': 'Número de Acidentes', 'sexo': 'Sexo'},
-                      barmode='group',  # Usando o barmode para agrupar as barras
-                      color_discrete_map={'F': 'pink', 'M': 'green', 'Não Informado': 'gray'})
+                    title="Evolução de Acidentes por Sexo ao Longo dos Anos",
+                    labels={
+                        'data_inversa': 'Ano', 'Quantidade de Acidentes': 'Número de Acidentes', 'sexo': 'Sexo'},
+                    barmode='group',  # Usando o barmode para agrupar as barras
+                    color_discrete_map={'F': 'pink', 'M': 'green', 'Não Informado': 'gray'})
 
 # Exibir o gráfico
 st.plotly_chart(fig_sexo_ano, use_container_width=True)
@@ -239,10 +244,21 @@ fig.update_layout(
 
 st.plotly_chart(fig, use_container_width=True)
 
-# Gráfico 1 e 2 - Sunburst para 'tipo_veiculo' e 'condicao_metereologica' em colunas
+# Gráfico 6 - Distribuição de Acidentes por Horário
+st.subheader("⏰ Distribuição de Acidentes por Horário")
+df_horario = df_filtrado['horario'].value_counts().sort_index().reset_index()
+df_horario.columns = ['horario', 'quantidade']
+
+fig_horario = px.bar(df_horario, x='horario', y='quantidade',
+                     labels={'horario': 'Horário', 'quantidade': 'Número de Acidentes'},
+                     title="Número de Acidentes por Horário do Dia")
+st.plotly_chart(fig_horario, use_container_width=True)
+
+
+# Gráfico 7 e 8 - Sunburst para 'tipo_veiculo' e 'condicao_metereologica' em colunas
 col1, col2 = st.columns(2)
 
-# Gráfico 1 - Sunburst para 'tipo_veiculo'
+# Gráfico 7 - Sunburst para 'tipo_veiculo'
 with col1:
     st.subheader("🚗 Tipos de Veículo")
 
@@ -251,10 +267,10 @@ with col1:
 
     # Criar o gráfico Sunburst para tipo_veiculo
     fig_tipo_veiculo = px.sunburst(df_filtrado, path=['tipo_veiculo'],
-                                   title="Distribuição dos Tipos de Veículo")
+                                     title="Distribuição dos Tipos de Veículo")
     st.plotly_chart(fig_tipo_veiculo, use_container_width=True)
 
-# Gráfico 2 - Sunburst para 'condicao_metereologica'
+# Gráfico 8 - Sunburst para 'condicao_metereologica'
 with col2:
     st.subheader("🌦️ Condição Meteorológica")
 
@@ -264,7 +280,7 @@ with col2:
 
     # Criar o gráfico Sunburst para condicao_metereologica
     fig_condicao_metereologica = px.sunburst(df_filtrado, path=['condicao_metereologica'],
-                                             title="Distribuição das Condições Meteorológicas")
+                                              title="Distribuição das Condições Meteorológicas")
     st.plotly_chart(fig_condicao_metereologica, use_container_width=True)
 
 
