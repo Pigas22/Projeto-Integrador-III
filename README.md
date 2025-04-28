@@ -17,7 +17,7 @@ pip install streamlit
 pip install pandas
 pip install plotly
 ```
-### 
+### Observações
 ```bash
 Descompactar o arquivo planilhas_acidentes.zip e colocar na pasta Projeto juntamente com o app.py
 ```
