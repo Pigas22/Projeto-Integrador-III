@@ -11,7 +11,7 @@ Levantamento de dados referentes a acidentes de trânsito no Brasil para anális
 - Thiago Holz Coutinho.
 
 ## Como executar o projeto
-## Instalando biblioteca
+## Instalando bibliotecas
 ```bash
 pip install streamlit
 pip install pandas
