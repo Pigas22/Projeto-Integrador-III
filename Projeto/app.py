@@ -6,6 +6,7 @@ import plotly.graph_objects as go  # type: ignore
 import locale  # type: ignore
 import os # type: ignore
 from Utils.descompactador import extrair_arquivos # type: ignore
+from Graficos.graficos import morte_dia # type: ignore
 
 
 CAMINHO_ATUAL = os.path.dirname(os.path.abspath(__file__))
@@ -282,6 +283,9 @@ with col2:
     fig_condicao_metereologica = px.sunburst(df_filtrado, path=['condicao_metereologica'],
                                               title="Distribuição das Condições Meteorológicas")
     st.plotly_chart(fig_condicao_metereologica, use_container_width=True)
+
+grafico9 = morte_dia(df_filtrado)
+st.plotly_chart(grafico9, use_container_width=True)
 
 
 # Rodapé
