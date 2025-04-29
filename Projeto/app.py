@@ -4,6 +4,18 @@ import streamlit as st  # type: ignore
 import plotly.express as px  # type: ignore
 import plotly.graph_objects as go  # type: ignore
 import locale  # type: ignore
+import os # type: ignore
+from Utils.descompactador import extrair_arquivos # type: ignore
+
+
+CAMINHO_ATUAL = os.path.dirname(os.path.abspath(__file__))
+PASTA_RAIZ = os.path.dirname(CAMINHO_ATUAL)
+
+ARQUIVO_ZIP = os.path.join(PASTA_RAIZ, 'Arquivos de Pesquisas', 'planilhas_acidentes.zip')
+PASTA_DESTINO = os.path.join(CAMINHO_ATUAL, 'Dados')
+
+print('[LOG] ->', extrair_arquivos(ARQUIVO_ZIP, PASTA_DESTINO))
+
 
 # Configurações da página
 st.set_page_config(
@@ -20,15 +32,15 @@ st.title("Painel de Acidentes de Trânsito no Brasil (2021-2025)")
 @st.cache_data
 def carregar_dados():
     # Carregar dados com tratamento para BOM (Byte Order Mark)
-    df_2021 = pd.read_csv("acidentes2021.csv", sep=";",
+    df_2021 = pd.read_csv(f"{PASTA_DESTINO + os.sep}acidentes2021.csv", sep=";",
                           encoding="utf-8", low_memory=False)
-    df_2022 = pd.read_csv("acidentes2022.csv", sep=";",
+    df_2022 = pd.read_csv(f"{PASTA_DESTINO + os.sep}acidentes2022.csv", sep=";",
                           encoding="utf-8", low_memory=False)
-    df_2023 = pd.read_csv("acidentes2023.csv", sep=";",
+    df_2023 = pd.read_csv(f"{PASTA_DESTINO + os.sep}acidentes2023.csv", sep=";",
                           encoding="utf-8", low_memory=False)
-    df_2024 = pd.read_csv("acidentes2024.csv", sep=";",
+    df_2024 = pd.read_csv(f"{PASTA_DESTINO + os.sep}acidentes2024.csv", sep=";",
                           encoding="utf-8", low_memory=False)
-    df_2025 = pd.read_csv("acidentes2025.csv", sep=";",
+    df_2025 = pd.read_csv(f"{PASTA_DESTINO + os.sep}acidentes2025.csv", sep=";",
                           encoding="utf-8", low_memory=False)
 
     # Remover qualquer coluna com nomes estranhos
