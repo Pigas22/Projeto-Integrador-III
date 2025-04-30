@@ -6,7 +6,7 @@ import plotly.graph_objects as go  # type: ignore
 import locale  # type: ignore
 import os # type: ignore
 import time # type: ignore
-from Interface.Graficos.graficos import morte_dia # type: ignore
+from Graficos.graficos import morte_dia # type: ignore
 
 
 def pagina_inicial(pasta_destino_dados):

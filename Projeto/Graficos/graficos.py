@@ -16,3 +16,5 @@ def morte_dia(df):
                         title="Total de Mortes em Acidentes por Dia da Semana")
     
     return fig_mortes_dia
+
+
