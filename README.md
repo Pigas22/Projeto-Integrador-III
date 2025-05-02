@@ -20,6 +20,5 @@ pip install plotly
 
 ### Iniciar o projeto em modo de desenvolvimento
 ```bash
-cd Projeto
-streamlit run app.py
+python -m streamlit run Projeto/app.py
 ```
