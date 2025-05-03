@@ -1,6 +1,6 @@
-import streamlit as st# type: ignore
-import pandas as pd# type: ignore
-import plotly.express as px# type: ignore
+import streamlit as st  # type: ignore
+import pandas as pd  # type: ignore
+import plotly.express as px  # type: ignore
 
 
 # Gráfico 01
@@ -10,7 +10,7 @@ def acidente_mes(df):
     ).dt.strftime('%B/%Y').str.capitalize()
 
     fig = px.line(df_mes, x='data', y='Quantidade', markers=True,
-                title="Evolução Mensal dos Acidentes")
+                  title="Evolução Mensal dos Acidentes")
     fig.update_layout(xaxis_title="Mês/Ano")
 
     return fig
@@ -20,11 +20,11 @@ def acidente_mes(df):
 def tipos_acidente(df):
     df_tipos = df['tipo_acidente'].value_counts().reset_index()
     df_tipos.columns = ['tipo_acidente', 'count']
-    
+
     fig = px.bar(df_tipos, x='tipo_acidente', y='count',
-                labels={'tipo_acidente': 'Tipo de Acidente',
-                        'count': 'Quantidade'},
-                title="Distribuição dos Tipos de Acidente")
+                 labels={'tipo_acidente': 'Tipo de Acidente',
+                         'count': 'Quantidade'},
+                 title="Distribuição dos Tipos de Acidente")
 
     return fig
 
@@ -40,9 +40,9 @@ def top10_municipios(df):
 
     # Gráfico de barras para os 10 municípios
     fig = px.bar(df_top10_municipios, x='municipio', y='quantidade',
-                labels={'municipio': 'Município',
-                        'quantidade': 'Número de Acidentes'},
-                title="Top 10 Municípios Brasileiros com Mais Acidentes")
+                 labels={'municipio': 'Município',
+                         'quantidade': 'Número de Acidentes'},
+                 title="Top 10 Municípios Brasileiros com Mais Acidentes")
 
     return fig
 
@@ -57,14 +57,13 @@ def sexo_acidentes(df):
     df_sexo_ano = df_sexo_ano.groupby([df['ano'], 'sexo']).size(
     ).reset_index(name='Quantidade de Acidentes')
 
-
     # Gráfico de barras agrupadas - Acidentes por Sexo ao longo dos anos
     fig = px.bar(df_sexo_ano, x='ano', y='Quantidade de Acidentes', color='sexo',
-                        title="Evolução de Acidentes por Sexo ao Longo dos Anos",
-                        labels={
-                            'ano': 'Ano', 'Quantidade de Acidentes': 'Número de Acidentes', 'sexo': 'Sexo'},
-                        barmode='group',  # Usando o barmode para agrupar as barras
-                        color_discrete_map={'F': 'pink', 'M': 'green', 'Não Informado': 'gray'})
+                 title="Evolução de Acidentes por Sexo ao Longo dos Anos",
+                 labels={
+                     'ano': 'Ano', 'Quantidade de Acidentes': 'Número de Acidentes', 'sexo': 'Sexo'},
+                 barmode='group',  # Usando o barmode para agrupar as barras
+                 color_discrete_map={'F': 'pink', 'M': 'green', 'Não Informado': 'gray'})
 
     return fig
 
@@ -120,8 +119,9 @@ def horarios_acidentes(df):
     df_horario.columns = ['horario', 'quantidade']
 
     fig = px.bar(df_horario, x='horario', y='quantidade',
-                        labels={'horario': 'Horário', 'quantidade': 'Número de Acidentes'},
-                        title="Número de Acidentes por Horário do Dia")
+                 labels={'horario': 'Horário',
+                         'quantidade': 'Número de Acidentes'},
+                 title="Número de Acidentes por Horário do Dia")
 
     return fig
 
@@ -131,44 +131,47 @@ def tipo_veiculo(df, top_num):
     # Conta as ocorrências
     df_tipo_veiculo = df['tipo_veiculo'].value_counts().reset_index()
 
-    df_tipo_veiculo.rename(columns={'tipo_veiculo': 'Tipo de Veículo', 'count': 'Quantidade'}, inplace=True)
-    
+    df_tipo_veiculo.rename(
+        columns={'tipo_veiculo': 'Tipo de Veículo', 'count': 'Quantidade'}, inplace=True)
+
     top = df_tipo_veiculo.head(top_num)
 
     # Criar o gráfico Sunburst para tipo_veiculo
     fig = px.pie(top, values=top['Quantidade'], names=top['Tipo de Veículo'],
-                                title=f"Distribuição dos Tipos de Veículo (TOP {top_num})", hole=0.5)
+                 title=f"Distribuição dos Tipos de Veículo (TOP {top_num})", hole=0.5)
 
-    return  fig, df_tipo_veiculo
+    return fig, df_tipo_veiculo
 
 
 # Gráfico 08
 def condicao_metereologica(df, top_num=10):
-     # Garantir que a coluna 'condicao_metereologica' seja do tipo string
-    df_condicao_metereologica = df['condicao_metereologica'].value_counts().reset_index()
+    # Garantir que a coluna 'condicao_metereologica' seja do tipo string
+    df_condicao_metereologica = df['condicao_metereologica'].value_counts(
+    ).reset_index()
 
-    df_condicao_metereologica.rename(columns={'condicao_metereologica': 'Condição Meteorológica', 'count': 'Quantidade'}, inplace=True)
+    df_condicao_metereologica.rename(columns={
+                                     'condicao_metereologica': 'Condição Meteorológica', 'count': 'Quantidade'}, inplace=True)
 
     top = df_condicao_metereologica.head(top_num)
 
     # Criar o gráfico Sunburst para condicao_metereologica
     fig = px.pie(top, values=top['Quantidade'], names=top['Condição Meteorológica'],
-                                            title=f"Distribuição das Condições Meteorológicas (TOP {top_num})")
-    
+                 title=f"Distribuição das Condições Meteorológicas (TOP {top_num})")
+
     return fig, df_condicao_metereologica
 
 
 # Gráfico 09
 def morte_dia(df):
-    dias = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado']
-    soma_morte = df.groupby('dia_semana')['mortos'].sum().reindex(dias).fillna(0).reset_index()
+    dias = ['domingo', 'segunda-feira', 'terça-feira',
+            'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado']
+    soma_morte = df.groupby('dia_semana')['mortos'].sum().reindex(
+        dias).fillna(0).reset_index()
     soma_morte.columns = ['dia_semana', 'total_mortes']
 
-    # Gráfico do Total de Mortes por Dia da Semana
-    st.subheader("💀 Total de Mortes por Dia da Semana")
-
     fig_mortes_dia = px.bar(soma_morte, x='dia_semana', y='total_mortes',
-                        labels={'dia_semana': 'Dia da Semana', 'total_mortes': 'Total de Mortes'},
-                        title="Total de Mortes em Acidentes por Dia da Semana")
-    
+                            labels={'dia_semana': 'Dia da Semana',
+                                    'total_mortes': 'Total de Mortes'},
+                            title="Total de Mortes em Acidentes por Dia da Semana")
+
     return fig_mortes_dia
