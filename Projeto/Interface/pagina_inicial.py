@@ -6,7 +6,17 @@ import plotly.express as px  # type: ignore
 import locale  # type: ignore
 import os  # type: ignore
 import time  # type: ignore
+import io  # type: ignore
 from Graficos import graficos  # type: ignore
+from Graficos.graficos import veiculos_por_horario
+
+
+def gerar_csv(df):
+    df_exportar = df.copy()
+    for col in df_exportar.select_dtypes(include='object'):
+        df_exportar[col] = df_exportar[col].fillna('').astype(str).str.strip()
+
+    return df_exportar.to_csv(index=False, sep=';', encoding='utf-8-sig')
 
 
 def pagina_inicial(pasta_destino_dados):
@@ -15,15 +25,10 @@ def pagina_inicial(pasta_destino_dados):
     print('-=' * 30)
     tempo_inicial = time.time()
 
-    # Configurações da página
-    st.set_page_config(
-        page_title="Acidentes de Trânsito no Brasil",
-        page_icon="🚗",
-        layout="wide"
-    )
-
+    # Título e descrição da página
     st.title("Painel de Acidentes de Trânsito no Brasil (2021-2025)")
 
+    # Carregar dados (cache para evitar recarregamento)
     if 'df' not in st.session_state:
         with st.spinner("Carregando dados de Acidentes (2021-2025)..."):
             st.session_state.df = carregar_dados(pasta_destino_dados)
@@ -60,6 +65,7 @@ def pagina_inicial(pasta_destino_dados):
         "Horário", ["Todos"] + opcoes_horarios, default=["Todos"])
     horarios_filtrados = opcoes_horarios if "Todos" in horarios_selecionados else horarios_selecionados
 
+    # Aplicando filtros
     df_filtrado = df[
         (df['uf'].isin(ufs_filtrados)) &
         (df['data_inversa'].dt.year.isin(anos_filtrados)) &
@@ -70,7 +76,7 @@ def pagina_inicial(pasta_destino_dados):
 
     locale.setlocale(locale.LC_TIME, 'Portuguese_Brazil.1252')
 
-    # Indicadores
+    # Indicadores gerais
     st.subheader("📊 Indicadores Gerais")
     col1, col2, col3 = st.columns(3)
     col1.metric("Total de Acidentes", len(df_filtrado))
@@ -80,67 +86,87 @@ def pagina_inicial(pasta_destino_dados):
 
     st.markdown("---")
 
+    # Botão para baixar os dados filtrados em CSV
+    csv_bytes = gerar_csv(df_filtrado)
+    st.download_button(
+        label="📥 Baixar dados filtrados (CSV)",
+        data=csv_bytes,
+        file_name="dados_filtrados.csv",
+        mime="text/csv"
+    )
+
     # Abas para gráficos
     abas = st.tabs([
-        "📅 Acidentes por Mês",
-        "🚗 Tipos de Acidente",
-        "🏙️ Top 10 Municípios",
-        "♀♂ Sexo por Ano",
-        "🚑 Lesões por Sexo",
-        "⏰ Acidentes por Horário",
-        "🚙 Tipo de Veículo",
-        "🌦️ Condição Meteorológica",
-        "☠️ Mortes por Dia"
+        "📅 Acidentes",
+        "🏙️ Top 10",
+        "♀♂ Sexo",
+        "⏰ Horários Criticos",
+        "🌦️ Condições Meteorológicas",
+        "☠️ Mortes"
     ])
 
     with abas[0]:
-        st.subheader("📅 Acidentes por Mês")
-        st.plotly_chart(graficos.acidente_mes(
-            df_filtrado), use_container_width=True)
+        st.subheader("📅 Evolução de Acidentes por Mês")
+        fig = graficos.acidente_mes(df_filtrado)
+        st.plotly_chart(fig, use_container_width=True)
+
+        st.subheader("🚗 Tipos de Acidente")
+        fig2 = graficos.tipos_acidente(df_filtrado)
+        st.plotly_chart(fig2, use_container_width=True)
 
     with abas[1]:
-        st.subheader("🚗 Tipos de Acidente")
-        st.plotly_chart(graficos.tipos_acidente(
-            df_filtrado), use_container_width=True)
-
-    with abas[2]:
         st.subheader("🏙️ Top 10 Municípios com Mais Acidentes")
         st.plotly_chart(graficos.top10_municipios(
             df_filtrado), use_container_width=True)
 
-    with abas[3]:
-        st.subheader("♀♂ Sexo com Mais Acidentes por Ano")
-        st.plotly_chart(graficos.sexo_acidentes(
+        st.subheader("🏙️ Top 10 Municípios com Mais Mortes")
+        st.plotly_chart(graficos.top10_municipios_mortes(
             df_filtrado), use_container_width=True)
 
-    with abas[4]:
-        st.subheader("🚑 Lesões por Sexo")
-        st.plotly_chart(graficos.lesoes_sexo(
-            df_filtrado), use_container_width=True)
+        st.subheader("🛣️ Top 10 BRs com Mais Acidentes")
+        st.plotly_chart(graficos.top10_brs(df_filtrado),
+                        use_container_width=True)
 
-    with abas[5]:
-        st.subheader("⏰ Distribuição de Acidentes por Horário")
-        st.plotly_chart(graficos.horarios_acidentes(
-            df_filtrado), use_container_width=True)
-
-    with abas[6]:
-        st.subheader("🚗 Tipos de Veículo")
+        st.subheader("🚗 Top 10 Tipos de Veículo")
         grafico07, dados07 = graficos.tipo_veiculo(df_filtrado, 10)
         st.plotly_chart(grafico07, use_container_width=True)
         st.dataframe(dados07, hide_index=True)
 
-    with abas[7]:
+    with abas[2]:
+        st.subheader("♀♂ Sexo com Mais Acidentes por Ano")
+        st.plotly_chart(graficos.sexo_acidentes(
+            df_filtrado), use_container_width=True)
+
+        st.subheader("🚑 Lesões por Sexo")
+        st.plotly_chart(graficos.lesoes_sexo(
+            df_filtrado), use_container_width=True)
+
+    with abas[3]:
+        st.subheader("⏰ Distribuição de Acidentes por Horário")
+        st.plotly_chart(graficos.horarios_acidentes(
+            df_filtrado), use_container_width=True)
+
+        st.subheader("🚗 Tipos de Veículos em Acidentes por Horário")
+        fig = veiculos_por_horario(df_filtrado)
+        st.plotly_chart(fig, use_container_width=True)
+
+    with abas[4]:
         st.subheader("🌦️ Condição Meteorológica")
         grafico08, dados08 = graficos.condicao_metereologica(df_filtrado, 7)
         st.plotly_chart(grafico08, use_container_width=True)
         st.dataframe(dados08, hide_index=True)
 
-    with abas[8]:
-        st.subheader("☠️ Mortes por Dia da Semana")
+    with abas[5]:
+        st.subheader("☠️ Total de Mortes por Dia da Semana")
         st.plotly_chart(graficos.morte_dia(df_filtrado),
                         use_container_width=True)
 
-    # Rodapé
+        st.subheader("☠️ Total de Mortes por Tipo de Acidente")
+        graficos.mortes_por_tipo_acidente(df_filtrado)
+
+        st.subheader("☠️ Total de Mortes por Faixa Etária e Sexo")
+        graficos.mortes_por_faixa_etaria_e_sexo(df_filtrado)
+
     st.markdown("---")
     st.caption(
         "Fonte: Polícia Rodoviária Federal (PRF) • Projeto Integrador III - Ciência de Dados")

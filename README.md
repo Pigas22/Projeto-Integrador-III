@@ -16,6 +16,7 @@ Levantamento de dados referentes a acidentes de trânsito no Brasil para anális
 pip install streamlit
 pip install pandas
 pip install plotly
+pip install kaleido
 ```
 
 ### Iniciar o projeto em modo de desenvolvimento
